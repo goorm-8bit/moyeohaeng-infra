@@ -126,10 +126,11 @@ resource "aws_lb" "main" {
 }
 
 resource "aws_lb_target_group" "main" {
-  name     = "${var.project_name}-tg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.main.id
+  name        = "${var.project_name}-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
 
   health_check {
     path = "/"
@@ -219,5 +220,30 @@ resource "aws_ecs_task_definition" "main" {
 
   tags = {
     Name = "${var.project_name}-td"
+  }
+}
+
+resource "aws_ecs_service" "main" {
+  name            = "${var.project_name}-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.main.arn
+  desired_count   = 2
+  launch_type     = "EC2"
+
+  network_configuration {
+    subnets         = aws_subnet.main[*].id
+    security_groups = [aws_security_group.ecs.id]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.main.arn
+    container_name   = var.project_name
+    container_port   = 80
+  }
+
+  depends_on = [aws_lb_listener.main]
+
+  tags = {
+    Name = "${var.project_name}-service"
   }
 }
