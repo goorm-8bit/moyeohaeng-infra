@@ -176,3 +176,22 @@ resource "aws_launch_template" "main" {
   user_data              = base64encode("#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config")
   vpc_security_group_ids = [aws_security_group.ecs.id]
 }
+
+resource "aws_autoscaling_group" "main" {
+  name                = "${var.project_name}-asg"
+  desired_capacity    = 2
+  max_size            = 3
+  min_size            = 1
+  vpc_zone_identifier = aws_subnet.main[*].id
+
+  launch_template {
+    id      = aws_launch_template.main.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    propagate_at_launch = true
+    value               = "${var.project_name}-ecs-instance"
+  }
+}
