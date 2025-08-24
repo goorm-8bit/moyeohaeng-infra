@@ -290,3 +290,19 @@ resource "aws_ecr_repository" "main" {
     Name = "${var.project_name}-ecr"
   }
 }
+
+data "aws_route53_zone" "main" {
+  name = "moyeohaeng.online"
+}
+
+resource "aws_route53_record" "api" {
+  name    = "api.moyeohaeng.online"
+  type    = "A"
+  zone_id = data.aws_route53_zone.main.zone_id
+
+  alias {
+    evaluate_target_health = true
+    name                   = aws_lb.main.dns_name
+    zone_id                = aws_lb.main.zone_id
+  }
+}
