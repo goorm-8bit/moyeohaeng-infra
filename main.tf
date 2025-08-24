@@ -60,3 +60,30 @@ resource "aws_route_table_association" "main" {
   subnet_id      = aws_subnet.main[count.index].id
   route_table_id = aws_route_table.main.id
 }
+
+resource "aws_security_group" "alb" {
+  name        = "${var.project_name}-alb-sg"
+  description = "Security group for ALB"
+  vpc_id      = aws_vpc.main.id
+
+  # Ingress: 들어오는 트래픽에 대한 규칙
+  ingress {
+    description = "Allow HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Egress: 나가는 트래픽에 대한 규칙
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-alb-sg"
+  }
+}
