@@ -282,3 +282,11 @@ resource "aws_ecs_service" "main" {
     Name = "${var.project_name}-service"
   }
 }
+
+resource "aws_ecr_repository" "main" {
+  name = var.project_name
+
+  tags = {
+    Name = "${var.project_name}-ecr"
+  }
+}
