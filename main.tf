@@ -195,3 +195,29 @@ resource "aws_autoscaling_group" "main" {
     value               = "${var.project_name}-ecs-instance"
   }
 }
+
+resource "aws_ecs_task_definition" "main" {
+  family                   = "${var.project_name}-td"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["EC2"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = var.project_name,
+      image     = "nginx:latest",
+      essential = true,
+      portMappings = [
+        {
+          containerPort = 80,
+          hostPort      = 80
+        }
+      ]
+    }
+  ])
+
+  tags = {
+    Name = "${var.project_name}-td"
+  }
+}
