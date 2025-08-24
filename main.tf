@@ -170,12 +170,47 @@ data "aws_ami" "ecs_optimized_ami" {
   }
 }
 
+resource "aws_iam_role" "ecs_instance_role" {
+  name = "${var.project_name}-ecs-instance-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_instance_role_attachment" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  role       = aws_iam_role.ecs_instance_role.name
+}
+
+resource "aws_iam_instance_profile" "ecs_instance_profile" {
+  name = "${var.project_name}-ecs-instance-profile"
+  role = aws_iam_role.ecs_instance_role.name
+}
+
 resource "aws_launch_template" "main" {
-  name_prefix            = "${var.project_name}-lt"
-  image_id               = data.aws_ami.ecs_optimized_ami.id
-  instance_type          = "t3.micro"
-  user_data              = base64encode("#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config")
-  vpc_security_group_ids = [aws_security_group.ecs.id]
+  name_prefix   = "${var.project_name}-lt"
+  image_id      = data.aws_ami.ecs_optimized_ami.id
+  instance_type = "t3.micro"
+  user_data     = base64encode("#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config")
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ecs_instance_profile.name
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.ecs.id]
+  }
 }
 
 resource "aws_autoscaling_group" "main" {
