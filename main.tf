@@ -112,3 +112,30 @@ resource "aws_security_group" "ecs" {
     Name = "${var.project_name}-ecs-sg"
   }
 }
+
+resource "aws_lb" "main" {
+  name               = "${var.project_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = aws_subnet.main[*].id
+
+  tags = {
+    Name = "${var.project_name}-alb"
+  }
+}
+
+resource "aws_lb_target_group" "main" {
+  name     = "${var.project_name}-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+
+  health_check {
+    path = "/"
+  }
+
+  tags = {
+    Name = "${var.project_name}-tg"
+  }
+}
