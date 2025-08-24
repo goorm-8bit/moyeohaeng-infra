@@ -158,3 +158,21 @@ resource "aws_ecs_cluster" "main" {
     Name = "${var.project_name}-cluster"
   }
 }
+
+data "aws_ami" "ecs_optimized_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
+  }
+}
+
+resource "aws_launch_template" "main" {
+  name_prefix            = "${var.project_name}-lt"
+  image_id               = data.aws_ami.ecs_optimized_ami.id
+  instance_type          = "t3.micro"
+  user_data              = base64encode("#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config")
+  vpc_security_group_ids = [aws_security_group.ecs.id]
+}
