@@ -200,7 +200,7 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 resource "aws_launch_template" "main" {
   name_prefix   = "${var.project_name}-lt"
   image_id      = data.aws_ami.ecs_optimized_ami.id
-  instance_type = "t3.micro"
+  instance_type = "t3.small"
   user_data     = base64encode("#!/bin/bash\necho ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config")
 
   iam_instance_profile {
