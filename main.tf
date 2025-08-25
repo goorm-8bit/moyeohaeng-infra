@@ -331,3 +331,28 @@ resource "aws_route53_record" "api" {
     zone_id                = aws_lb.main.zone_id
   }
 }
+
+resource "aws_security_group" "db" {
+  name        = "${var.project_name}-db-sg"
+  description = "Security group for RDS allowing access from ECS SG"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "Allow MySQL from ECS SG"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-db-sg"
+  }
+}
