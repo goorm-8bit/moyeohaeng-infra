@@ -9,6 +9,13 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "moyeohaeng-tf-bucket"
+    key            = "dev/terraform.tfstate"
+    region         = "ap-northeast-2"
+    dynamodb_table = "moyeohaeng-tf-locks"
+  }
 }
 
 provider "aws" {
