@@ -21,3 +21,8 @@ variable "certificate_arn" {
   description = "ALB에 사용할 ACM 인증서의 ARN"
   type        = string
 }
+
+variable "image_tag" {
+  type    = string
+  default = "latest"
+}

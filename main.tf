@@ -104,8 +104,8 @@ resource "aws_security_group" "ecs" {
 
   ingress {
     description     = "Allow traffic from ALB"
-    from_port       = 80
-    to_port         = 80
+    from_port       = 8080
+    to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }
@@ -142,7 +142,7 @@ resource "aws_lb_target_group" "main" {
   target_type = "ip"
 
   health_check {
-    path = "/"
+    path = "/actuator/health"
   }
 
   tags = {
@@ -268,12 +268,11 @@ resource "aws_ecs_task_definition" "main" {
   container_definitions = jsonencode([
     {
       name      = var.project_name,
-      image     = "nginx:latest",
+      image     = "${aws_ecr_repository.main.repository_url}:${var.image_tag}",
       essential = true,
       portMappings = [
         {
-          containerPort = 80,
-          hostPort      = 80
+          containerPort = 8080
         }
       ]
     }
@@ -299,7 +298,7 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_lb_target_group.main.arn
     container_name   = var.project_name
-    container_port   = 80
+    container_port   = 8080
   }
 
   depends_on = [aws_lb_listener.main]
