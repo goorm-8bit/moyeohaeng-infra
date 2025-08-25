@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 }
 
@@ -364,4 +368,10 @@ resource "aws_db_subnet_group" "main" {
   tags = {
     Name = "${var.project_name}-db-subnet-group"
   }
+}
+
+resource "random_password" "db_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
 }
