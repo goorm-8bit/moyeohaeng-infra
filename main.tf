@@ -390,7 +390,7 @@ resource "aws_db_subnet_group" "main" {
 resource "random_password" "db_password" {
   length           = 16
   special          = true
-  override_special = "_%@"
+  override_special = "!#%^&*()-_=+"
 }
 
 resource "aws_db_instance" "main" {
@@ -452,5 +452,41 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  role       = aws_iam_role.ecs_task_execution_role.name
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_policy" "ecs_ssm_read" {
+  name = "${var.project_name}-ecs-ssm-read"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ],
+        Resource = [
+          aws_ssm_parameter.db_username.arn,
+          aws_ssm_parameter.db_password.arn,
+          aws_ssm_parameter.db_url.arn
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "kms:Decrypt"
+        ],
+        Resource = "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.current.account_id}:alias/aws/ssm"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_execution_role_attach" {
+  policy_arn = aws_iam_policy.ecs_ssm_read.arn
   role       = aws_iam_role.ecs_task_execution_role.name
 }
