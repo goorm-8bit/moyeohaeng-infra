@@ -26,3 +26,13 @@ variable "image_tag" {
   type    = string
   default = "latest"
 }
+
+variable "db_name" {
+  type    = string
+  default = "moyeohaeng"
+}
+
+variable "db_username" {
+  type    = string
+  default = "moyeohaeng"
+}

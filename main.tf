@@ -375,3 +375,22 @@ resource "random_password" "db_password" {
   special          = true
   override_special = "_%@"
 }
+
+resource "aws_db_instance" "main" {
+  identifier             = "${var.project_name}-mysql"
+  allocated_storage      = 20
+  engine                 = "mysql"
+  engine_version         = "8.0.42"
+  instance_class         = "db.t4g.micro"
+  db_name                = var.db_name
+  username               = var.db_username
+  password               = random_password.db_password.result
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  vpc_security_group_ids = [aws_security_group.db.id]
+  skip_final_snapshot    = true
+  publicly_accessible    = true
+
+  tags = {
+    Name = "${var.project_name}-mysql"
+  }
+}
