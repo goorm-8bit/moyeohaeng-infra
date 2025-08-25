@@ -279,6 +279,20 @@ resource "aws_ecs_task_definition" "main" {
           containerPort = 8080
         }
       ]
+      secrets = [
+        {
+          name      = "SPRING_MYSQL_URL",
+          valueFrom = aws_ssm_parameter.db_url.arn
+        },
+        {
+          name      = "SPRING_MYSQL_USERNAME",
+          valueFrom = aws_ssm_parameter.db_username.arn
+        },
+        {
+          name      = "SPRING_MYSQL_PASSWORD",
+          valueFrom = aws_ssm_parameter.db_password.arn
+        }
+      ]
     }
   ])
 
