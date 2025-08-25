@@ -329,7 +329,11 @@ resource "aws_ecs_service" "main" {
     container_port   = 8080
   }
 
-  depends_on = [aws_lb_listener.main]
+  lifecycle {
+    ignore_changes = [
+      task_definition
+    ]
+  }
 
   tags = {
     Name = "${var.project_name}-service"
