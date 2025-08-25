@@ -394,3 +394,24 @@ resource "aws_db_instance" "main" {
     Name = "${var.project_name}-mysql"
   }
 }
+
+resource "aws_ssm_parameter" "db_url" {
+  name      = "/${var.project_name}/DB_URL"
+  type      = "String"
+  value     = "jdbc:mysql://${aws_db_instance.main.address}:${aws_db_instance.main.port}/${var.db_name}?useSSL=false&allowPublicKeyRetrieval=true"
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "db_username" {
+  name      = "/${var.project_name}/DB_USERNAME"
+  type      = "String"
+  value     = var.db_username
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "db_password" {
+  name      = "/${var.project_name}/DB_PASSWORD"
+  type      = "SecureString"
+  value     = random_password.db_password.result
+  overwrite = true
+}
