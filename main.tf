@@ -356,3 +356,12 @@ resource "aws_security_group" "db" {
     Name = "${var.project_name}-db-sg"
   }
 }
+
+resource "aws_db_subnet_group" "main" {
+  name       = "${var.project_name}-db-subnet-group"
+  subnet_ids = aws_subnet.main[*].id
+
+  tags = {
+    Name = "${var.project_name}-db-subnet-group"
+  }
+}
