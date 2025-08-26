@@ -123,6 +123,14 @@ resource "aws_security_group" "ecs" {
     security_groups = [aws_security_group.alb.id]
   }
 
+  ingress {
+    description     = "Allow management traffic from ALB"
+    from_port       = 9090
+    to_port         = 9090
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -149,13 +157,14 @@ resource "aws_lb" "main" {
 
 resource "aws_lb_target_group" "main" {
   name        = "${var.project_name}-tg"
-  port        = 80
+  port        = 8080
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
 
   health_check {
     path = "/actuator/health"
+    port = "9090"
   }
 
   tags = {
@@ -287,6 +296,9 @@ resource "aws_ecs_task_definition" "main" {
       portMappings = [
         {
           containerPort = 8080
+        },
+        {
+          containerPort = 9090
         }
       ]
       secrets = [
@@ -303,6 +315,12 @@ resource "aws_ecs_task_definition" "main" {
           valueFrom = aws_ssm_parameter.db_password.arn
         }
       ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "curl -f http://localhost:9090/actuator/health || exit 1"
+        ]
+      }
     }
   ])
 
