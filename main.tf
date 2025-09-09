@@ -313,6 +313,10 @@ resource "aws_ecs_task_definition" "main" {
         {
           name      = "SPRING_MYSQL_PASSWORD",
           valueFrom = aws_ssm_parameter.db_password.arn
+        },
+        {
+          name      = "SPRING_JWT_SECRET_KEY"
+          valueFrom = aws_ssm_parameter.jwt_secret_key.arn
         }
       ]
       healthCheck = {
@@ -501,7 +505,8 @@ resource "aws_iam_policy" "ecs_ssm_read" {
         Resource = [
           aws_ssm_parameter.db_username.arn,
           aws_ssm_parameter.db_password.arn,
-          aws_ssm_parameter.db_url.arn
+          aws_ssm_parameter.db_url.arn,
+          aws_ssm_parameter.jwt_secret_key.arn
         ]
       },
       {
@@ -518,4 +523,16 @@ resource "aws_iam_policy" "ecs_ssm_read" {
 resource "aws_iam_role_policy_attachment" "ecs_execution_role_attach" {
   policy_arn = aws_iam_policy.ecs_ssm_read.arn
   role       = aws_iam_role.ecs_task_execution_role.name
+}
+
+resource "random_string" "jwt_secret_key" {
+  length  = 64
+  special = false
+}
+
+resource "aws_ssm_parameter" "jwt_secret_key" {
+  name      = "/${var.project_name}/JWT_SECRET_KEY"
+  type      = "SecureString"
+  value     = base64encode(random_string.jwt_secret_key.result)
+  overwrite = false
 }
