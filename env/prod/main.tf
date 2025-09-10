@@ -34,3 +34,13 @@ module "ecs_cluster" {
   source       = "../../modules/compute/ecs-cluster"
   project_name = var.project_name
 }
+
+# 6. ECS Task Definition 모듈
+module "ecs_task_definition" {
+  source             = "../../modules/compute/ecs-task-definition"
+  project_name       = var.project_name
+  image_url          = var.image_url
+  secrets            = var.spring_secrets
+  environment        = var.spring_environment
+  execution_role_arn = module.iam.ecs_task_execution_role_arn
+}
