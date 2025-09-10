@@ -39,7 +39,7 @@ module "ecs_cluster" {
 module "ecs_task_definition" {
   source             = "../../modules/compute/ecs-task-definition"
   project_name       = var.project_name
-  image_url          = var.image_url
+  image_url          = "${module.ecr.repository_url}:${var.image_tag}"
   secrets            = var.spring_secrets
   environment        = var.spring_environment
   execution_role_arn = module.iam.ecs_task_execution_role_arn
@@ -76,4 +76,10 @@ module "asg" {
   desired_capacity = var.asg_desired_capacity
   lt_id            = module.lt.lt_id
   subnet_ids       = module.network.subnet_ids
+}
+
+# 10. ECR 모듈
+module "ecr" {
+  source       = "../../modules/developer_tool/ecr"
+  project_name = var.project_name
 }

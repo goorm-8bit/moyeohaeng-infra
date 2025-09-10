@@ -30,9 +30,10 @@ variable "certificate_arn" {
   type        = string
 }
 
-variable "image_url" {
-  description = "컨테이너를 생성하는 데 사용할 도커 이미지의 URL"
+variable "image_tag" {
+  description = "컨테이너를 생성하는 데 사용할 ECR 이미지의 태그"
   type        = string
+  default     = "latest"
 }
 
 variable "spring_secrets" {
