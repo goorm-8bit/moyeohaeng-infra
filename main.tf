@@ -423,6 +423,13 @@ resource "aws_security_group" "db" {
     security_groups = [aws_security_group.ecs.id]
   }
 
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -462,7 +469,7 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.db.id]
   skip_final_snapshot    = true
-  publicly_accessible    = false
+  publicly_accessible    = true
 
   lifecycle {
     prevent_destroy = true
