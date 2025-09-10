@@ -18,3 +18,13 @@ module "iam" {
   source       = "../../modules/iam"
   project_name = var.project_name
 }
+
+# 4. ALB 모듈
+module "alb" {
+  source          = "../../modules/compute/alb"
+  project_name    = var.project_name
+  certificate_arn = var.certificate_arn
+  vpc_id          = module.network.vpc_id
+  subnet_ids      = module.network.subnet_ids
+  alb_sg_id       = module.sg.alb_sg_id
+}
