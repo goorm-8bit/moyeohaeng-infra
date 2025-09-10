@@ -28,3 +28,9 @@ module "alb" {
   subnet_ids      = module.network.subnet_ids
   alb_sg_id       = module.sg.alb_sg_id
 }
+
+# 5. ECS 클러스터 모듈
+module "ecs_cluster" {
+  source       = "../../modules/compute/ecs-cluster"
+  project_name = var.project_name
+}
