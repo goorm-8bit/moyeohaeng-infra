@@ -90,3 +90,21 @@ variable "asg_desired_capacity" {
   type        = number
   default     = 2
 }
+
+variable "db_name" {
+  description = "생성할 데이터베이스의 이름"
+  type        = string
+  default     = "moyeohaeng"
+}
+
+variable "db_username" {
+  description = "데이터베이스 마스터 사용자의 이름"
+  type        = string
+  default     = "moyeohaeng"
+}
+
+variable "instance_class" {
+  description = "DB 인스턴스의 사양"
+  type        = string
+  default     = "db.t4g.micro"
+}

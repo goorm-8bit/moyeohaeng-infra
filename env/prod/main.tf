@@ -83,3 +83,14 @@ module "ecr" {
   source       = "../../modules/developer_tool/ecr"
   project_name = var.project_name
 }
+
+# 11. RDS 모듈
+module "rds" {
+  source         = "../../modules/database/rds"
+  project_name   = var.project_name
+  db_name        = var.db_name
+  db_username    = var.db_username
+  instance_class = var.instance_class
+  subnet_ids     = module.network.subnet_ids
+  rds_sg_id      = module.sg.rds_sg_id
+}
