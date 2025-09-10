@@ -526,7 +526,9 @@ resource "aws_iam_policy" "ecs_ssm_read" {
           aws_ssm_parameter.db_username.arn,
           aws_ssm_parameter.db_password.arn,
           aws_ssm_parameter.db_url.arn,
-          aws_ssm_parameter.jwt_secret_key.arn
+          aws_ssm_parameter.jwt_secret_key.arn,
+          aws_ssm_parameter.redis_host.arn,
+          aws_ssm_parameter.redis_port.arn
         ]
       },
       {
@@ -607,4 +609,18 @@ resource "aws_elasticache_replication_group" "main" {
   tags = {
     Name = "${var.project_name}-valkey"
   }
+}
+
+resource "aws_ssm_parameter" "redis_host" {
+  name      = "/${var.project_name}/SPRING_REDIS_HOST"
+  type      = "String"
+  value     = aws_elasticache_replication_group.main.primary_endpoint_address
+  overwrite = true
+}
+
+resource "aws_ssm_parameter" "redis_port" {
+  name      = "/${var.project_name}/SPRING_REDIS_PORT"
+  type      = "String"
+  value     = aws_elasticache_replication_group.main.port
+  overwrite = true
 }
