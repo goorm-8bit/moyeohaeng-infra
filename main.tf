@@ -590,3 +590,21 @@ resource "aws_elasticache_subnet_group" "main" {
     Name = "${var.project_name}-redis-subnet-group"
   }
 }
+
+resource "aws_elasticache_replication_group" "main" {
+  replication_group_id       = "${var.project_name}-valkey"
+  description                = "Moyeohaeng Valkey Cluster"
+  engine                     = "valkey"
+  engine_version             = "8.0"
+  node_type                  = "cache.t4g.micro"
+  port                       = 6379
+  num_cache_clusters         = 1
+  subnet_group_name          = aws_elasticache_subnet_group.main.name
+  security_group_ids         = [aws_security_group.redis.id]
+  automatic_failover_enabled = false
+  snapshot_retention_limit   = 0
+
+  tags = {
+    Name = "${var.project_name}-valkey"
+  }
+}
