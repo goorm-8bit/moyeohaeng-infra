@@ -56,3 +56,13 @@ module "ecs_service" {
   ecs_sg_id           = module.sg.ecs_sg_id
   target_group_arn    = module.alb.target_group_arn
 }
+
+# 8. 시작 템플릿 모듈
+module "lt" {
+  source                    = "../../modules/compute/lt"
+  project_name              = var.project_name
+  instance_type             = var.instance_type
+  cluster_name              = module.ecs_cluster.cluster_name
+  ecs_sg_id                 = module.iam.ecs_instance_profile_name
+  iam_instance_profile_name = module.sg.ecs_sg_id
+}

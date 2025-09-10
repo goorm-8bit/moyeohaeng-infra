@@ -65,3 +65,9 @@ variable "spring_environment" {
     }
   ]
 }
+
+variable "instance_type" {
+  description = "EC2 인스턴스의 사양"
+  type        = string
+  default     = "t3.small"
+}
