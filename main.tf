@@ -440,6 +440,10 @@ resource "aws_db_instance" "main" {
   skip_final_snapshot    = true
   publicly_accessible    = false
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name = "${var.project_name}-mysql"
   }
