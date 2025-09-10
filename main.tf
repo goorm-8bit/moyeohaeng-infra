@@ -581,3 +581,12 @@ resource "aws_security_group" "redis" {
     Name = "${var.project_name}-redis-sg"
   }
 }
+
+resource "aws_elasticache_subnet_group" "main" {
+  name       = "${var.project_name}-redis-subnet-group"
+  subnet_ids = aws_subnet.main[*].id
+
+  tags = {
+    Name = "${var.project_name}-redis-subnet-group"
+  }
+}
