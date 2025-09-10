@@ -301,6 +301,20 @@ resource "aws_ecs_task_definition" "main" {
           containerPort = 9090
         }
       ]
+      environment = [
+        {
+          name  = "CORS_ALLOWED_ORIGINS",
+          value = "https://moyeohaeng.online,https://dev.moyeohaeng.online,http://localhost:5173"
+        },
+        {
+          name  = "CORS_ALLOWED_METHODS",
+          value = "GET,POST,PUT,DELETE,PATCH,OPTIONS"
+        },
+        {
+          name  = "CORS_ALLOWED_HEADERS",
+          value = "Authorization,Content-Type,Accept,Origin,X-Requested-With"
+        }
+      ]
       secrets = [
         {
           name      = "SPRING_MYSQL_URL",
