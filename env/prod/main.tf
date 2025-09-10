@@ -4,3 +4,9 @@ module "network" {
   vpc_cidr_block     = var.vpc_cidr_block
   subnet_cidr_blocks = var.subnet_cidr_blocks
 }
+
+module "sg" {
+  source       = "../../modules/compute/sg"
+  project_name = var.project_name
+  vpc_id       = module.network.vpc_id
+}
