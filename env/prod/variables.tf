@@ -108,3 +108,9 @@ variable "instance_class" {
   type        = string
   default     = "db.t4g.micro"
 }
+
+variable "node_type" {
+  description = "ElastiCache 클러스터의 노드 사양"
+  type        = string
+  default     = "cache.t4g.micro"
+}

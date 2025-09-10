@@ -94,3 +94,12 @@ module "rds" {
   subnet_ids     = module.network.subnet_ids
   rds_sg_id      = module.sg.rds_sg_id
 }
+
+# 12. ElastiCache 모듈
+module "ec" {
+  source            = "../../modules/database/ec"
+  project_name      = var.project_name
+  node_type         = var.node_type
+  subnet_ids        = module.network.subnet_ids
+  elasticache_sg_id = module.sg.elasticache_sg_id
+}
