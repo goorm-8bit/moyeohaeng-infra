@@ -331,7 +331,15 @@ resource "aws_ecs_task_definition" "main" {
         {
           name      = "SPRING_JWT_SECRET_KEY"
           valueFrom = aws_ssm_parameter.jwt_secret_key.arn
-        }
+        },
+        {
+          name      = "SPRING_REDIS_HOST",
+          valueFrom = aws_ssm_parameter.redis_host.arn
+        },
+        {
+          name      = "SPRING_REDIS_PORT",
+          valueFrom = aws_ssm_parameter.redis_port.arn
+        },
       ]
       healthCheck = {
         command = [
