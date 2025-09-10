@@ -44,3 +44,15 @@ module "ecs_task_definition" {
   environment        = var.spring_environment
   execution_role_arn = module.iam.ecs_task_execution_role_arn
 }
+
+# 7. ECS 서비스 모듈
+module "ecs_service" {
+  source              = "../../modules/compute/ecs-service"
+  project_name        = var.project_name
+  container_name      = var.project_name
+  cluster_id          = module.ecs_cluster.cluster_id
+  task_definition_arn = module.ecs_task_definition.task_definition_arn
+  subnet_ids          = module.network.subnet_ids
+  ecs_sg_id           = module.sg.ecs_sg_id
+  target_group_arn    = module.alb.target_group_arn
+}
