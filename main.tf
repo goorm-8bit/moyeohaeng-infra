@@ -556,3 +556,28 @@ resource "aws_ssm_parameter" "jwt_secret_key" {
   value     = base64encode(random_string.jwt_secret_key.result)
   overwrite = false
 }
+
+resource "aws_security_group" "redis" {
+  name        = "${var.project_name}-redis-sg"
+  description = "Security group for ElastiCache Redis allowing access from ECS SG"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "Allow Redis from ECS SG"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-redis-sg"
+  }
+}
