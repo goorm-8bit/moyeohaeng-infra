@@ -66,3 +66,14 @@ module "lt" {
   ecs_sg_id                 = module.iam.ecs_instance_profile_name
   iam_instance_profile_name = module.sg.ecs_sg_id
 }
+
+# 9. 오토스케일링 그룹 모듈
+module "asg" {
+  source           = "../../modules/compute/asg"
+  project_name     = var.project_name
+  min_size         = var.asg_min_size
+  max_size         = var.asg_max_size
+  desired_capacity = var.asg_desired_capacity
+  lt_id            = module.lt.lt_id
+  subnet_ids       = module.network.subnet_ids
+}

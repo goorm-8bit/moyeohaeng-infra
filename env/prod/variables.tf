@@ -71,3 +71,21 @@ variable "instance_type" {
   type        = string
   default     = "t3.small"
 }
+
+variable "asg_min_size" {
+  description = "유지할 최소 EC2 인스턴스 수"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "유지할 최대 EC2 인스턴스 수"
+  type        = number
+  default     = 3
+}
+
+variable "asg_desired_capacity" {
+  description = "평상시 유지할 EC2 인스턴스 수"
+  type        = number
+  default     = 2
+}
