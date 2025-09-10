@@ -340,6 +340,8 @@ resource "aws_ecs_service" "main" {
   desired_count   = 2
   launch_type     = "EC2"
 
+  health_check_grace_period_seconds = 300
+
   network_configuration {
     subnets         = aws_subnet.main[*].id
     security_groups = [aws_security_group.ecs.id]
