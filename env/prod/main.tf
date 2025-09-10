@@ -31,13 +31,13 @@ module "alb" {
 
 # 5. ECS 클러스터 모듈
 module "ecs_cluster" {
-  source       = "../../modules/compute/ecs-cluster"
+  source       = "../../modules/compute/ecs_cluster"
   project_name = var.project_name
 }
 
 # 6. ECS Task Definition 모듈
 module "ecs_task_definition" {
-  source             = "../../modules/compute/ecs-task-definition"
+  source             = "../../modules/compute/ecs_task_definition"
   project_name       = var.project_name
   image_url          = "${module.ecr.repository_url}:${var.image_tag}"
   secrets            = var.spring_secrets
@@ -47,7 +47,7 @@ module "ecs_task_definition" {
 
 # 7. ECS 서비스 모듈
 module "ecs_service" {
-  source              = "../../modules/compute/ecs-service"
+  source              = "../../modules/compute/ecs_service"
   project_name        = var.project_name
   container_name      = var.project_name
   cluster_id          = module.ecs_cluster.cluster_id
