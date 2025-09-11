@@ -14,7 +14,7 @@ resource "aws_launch_template" "this" {
   name_prefix   = "${var.project_name}-lt"
   image_id      = data.aws_ami.ecs_optimized_ami.id
   instance_type = var.instance_type
-  user_data     = base64encode(base64encode("#!/bin/bash\necho ECS_CLUSTER=${var.cluster_name} >> /etc/ecs/ecs.config"))
+  user_data     = base64encode("#!/bin/bash\necho ECS_CLUSTER=${var.cluster_name} >> /etc/ecs/ecs.config")
 
   # EC2 인스턴스에 연결할 IAM 역할을 지정
   iam_instance_profile {
