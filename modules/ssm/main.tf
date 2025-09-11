@@ -47,3 +47,45 @@ resource "aws_ssm_parameter" "jwt_secret_key" {
   value     = base64encode(random_string.jwt_secret_key.result)
   overwrite = false
 }
+
+# IAM
+data "aws_caller_identity" "this" {}
+
+# ECS 태스크 실행 역할에 추가할 'SSM 파라미터 읽기' 정책 생성
+resource "aws_iam_policy" "ecs_ssm_role" {
+  name = "${var.project_name}-ecs-ssm-role"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ],
+        Resource = [
+          aws_ssm_parameter.db_username.arn,
+          aws_ssm_parameter.db_password.arn,
+          aws_ssm_parameter.db_url.arn,
+          aws_ssm_parameter.redis_host.arn,
+          aws_ssm_parameter.redis_port.arn,
+          aws_ssm_parameter.jwt_secret_key.arn
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "kms:Decrypt"
+        ],
+        Resource = "arn:aws:kms:${var.aws_region}:${data.aws_caller_identity.this.account_id}:alias/aws/ssm"
+      }
+    ]
+  })
+}
+
+# 위에서 만든 정책을 ECS 태스크 실행 역할에 연결
+resource "aws_iam_role_policy_attachment" "ecs_ssm_role_policy" {
+  policy_arn = aws_iam_policy.ecs_ssm_role.arn
+  role       = var.ecs_task_execution_role_name
+}

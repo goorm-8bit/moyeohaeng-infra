@@ -39,3 +39,14 @@ variable "ec_port" {
   description = "ElastiCache 클러스터의 포트"
   type        = number
 }
+
+# IAM
+variable "ecs_task_execution_role_name" {
+  description = "SSM 파라미터 읽기 정책을 연결할 IAM 역할의 이름"
+  type        = string
+}
+
+variable "aws_region" {
+  description = "KMS 키 ARN을 구성하기 위한 AWS 리전"
+  type        = string
+}

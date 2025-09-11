@@ -70,8 +70,8 @@ module "lt" {
   project_name              = local.name_prefix
   instance_type             = var.instance_type
   cluster_name              = module.ecs_cluster.cluster_name
-  ecs_sg_id                 = module.iam.ecs_instance_profile_name
-  iam_instance_profile_name = module.sg.ecs_sg_id
+  ecs_sg_id                 = module.sg.ecs_sg_id
+  iam_instance_profile_name = module.iam.ecs_instance_profile_name
 }
 
 # 9. 오토스케일링 그룹 모듈
@@ -113,15 +113,17 @@ module "ec" {
 
 # 13. SSM 모듈
 module "ssm" {
-  source                      = "../../modules/ssm"
-  project_name                = local.name_prefix
-  db_instance_address         = module.rds.db_instance_address
-  db_instance_port            = module.rds.db_instance_port
-  db_name                     = module.rds.db_name
-  db_username                 = module.rds.db_username
-  db_password                 = module.rds.db_password
-  ec_primary_endpoint_address = module.ec.primary_endpoint_address
-  ec_port                     = module.ec.port
+  source                       = "../../modules/ssm"
+  project_name                 = local.name_prefix
+  db_instance_address          = module.rds.db_instance_address
+  db_instance_port             = module.rds.db_instance_port
+  db_name                      = module.rds.db_name
+  db_username                  = module.rds.db_username
+  db_password                  = module.rds.db_password
+  ec_primary_endpoint_address  = module.ec.primary_endpoint_address
+  ec_port                      = module.ec.port
+  aws_region                   = var.aws_region
+  ecs_task_execution_role_name = module.iam.ecs_task_execution_role_name
 }
 
 # 14. Route 53 모듈
