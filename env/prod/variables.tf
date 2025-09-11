@@ -36,15 +36,6 @@ variable "image_tag" {
   default     = "latest"
 }
 
-variable "spring_secrets" {
-  description = "컨테이너에 주입할 SSM 파라미터 스토어의 비밀 값 목록"
-  type = list(object({
-    name      = string
-    valueFrom = string
-  }))
-  default = []
-}
-
 variable "spring_environment" {
   description = "컨테이너에 주입할 환경 변수 목록"
   type = list(object({

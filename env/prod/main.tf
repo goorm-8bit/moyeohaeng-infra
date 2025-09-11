@@ -39,10 +39,13 @@ module "ecs_cluster" {
 module "ecs_task_definition" {
   source             = "../../modules/compute/ecs_task_definition"
   project_name       = var.project_name
-  image_url          = "${module.ecr.repository_url}:${var.image_tag}"
-  secrets            = var.spring_secrets
-  environment        = var.spring_environment
   execution_role_arn = module.iam.ecs_task_execution_role_arn
+  image_url          = "${module.ecr.repository_url}:${var.image_tag}"
+  environment        = var.spring_environment
+  secrets = [for key, arn in module.ssm.spring_parameter_arns : {
+    name      = key
+    valueFrom = arn
+  }]
 }
 
 # 7. ECS 서비스 모듈
@@ -102,4 +105,17 @@ module "ec" {
   node_type         = var.node_type
   subnet_ids        = module.network.subnet_ids
   elasticache_sg_id = module.sg.elasticache_sg_id
+}
+
+# 13. SSM 모듈
+module "ssm" {
+  source                      = "../../modules/ssm"
+  project_name                = var.project_name
+  db_instance_address         = module.rds.db_instance_address
+  db_instance_port            = module.rds.db_instance_port
+  db_name                     = module.rds.db_name
+  db_username                 = module.rds.db_username
+  db_password                 = module.rds.db_password
+  ec_primary_endpoint_address = module.ec.primary_endpoint_address
+  ec_port                     = module.ec.port
 }
