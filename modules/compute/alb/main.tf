@@ -60,3 +60,39 @@ resource "aws_lb_listener" "https" {
     target_group_arn = aws_lb_target_group.this.arn
   }
 }
+
+# 5. 그라파나 Target Group 생성
+resource "aws_lb_target_group" "grafana" {
+  name        = "${var.project_name}-grafana-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    path = "/api/health"
+    port = "3000"
+  }
+
+  tags = {
+    Name = "${var.project_name}-grafana-tg"
+  }
+}
+
+# 6. HTTPS 리스너에 그라파나 라우팅 규칙 추가
+# 호스트 헤더가 'grafana.*' 일 경우, 위에서 만든 타겟 그룹으로 트래픽을 보냄
+resource "aws_lb_listener_rule" "grafana" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 99 # 다른 규칙과 충돌하지 않도록 우선순위 지정
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.grafana.arn
+  }
+
+  condition {
+    host_header {
+      values = ["grafana.${var.zone_name}"]
+    }
+  }
+}

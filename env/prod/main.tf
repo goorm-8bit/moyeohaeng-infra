@@ -31,6 +31,7 @@ module "alb" {
   vpc_id          = module.network.vpc_id
   subnet_ids      = module.network.subnet_ids
   alb_sg_id       = module.sg.alb_sg_id
+  zone_name       = var.zone_name
 }
 
 # 5. ECS 클러스터 모듈
@@ -133,4 +134,16 @@ module "route53" {
   record_name     = var.record_name
   target_dns_name = module.alb.lb_dns_name
   target_zone_id  = module.alb.lb_zone_id
+}
+
+# 15. 모니터링 모듈
+module "monitoring" {
+  source                   = "../../modules/monitoring"
+  project_name             = local.name_prefix
+  vpc_id                   = module.network.vpc_id
+  subnet_ids               = module.network.subnet_ids
+  private_dns_namespace_id = module.network.private_dns_namespace_id
+  aws_region               = var.aws_region
+  alb_sg_id                = module.sg.alb_sg_id
+  cluster_id               = module.ecs_cluster.cluster_id
 }

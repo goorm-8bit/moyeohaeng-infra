@@ -21,3 +21,8 @@ variable "certificate_arn" {
   description = "HTTPS 리스너에 사용할 ACM 인증서의 ARN"
   type        = string
 }
+
+variable "zone_name" {
+  description = "Route 53 호스팅 영역의 이름"
+  type        = string
+}
