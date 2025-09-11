@@ -35,3 +35,9 @@ variable "cluster_id" {
   default = "ECS 클러스터의 ID"
   type    = string
 }
+
+variable "prometheus_config_content" {
+  description = "프로메테우스 설정 파일(prometheus.yml)의 내용"
+  type        = string
+  sensitive   = true
+}
