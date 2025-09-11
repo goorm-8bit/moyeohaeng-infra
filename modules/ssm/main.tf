@@ -64,14 +64,7 @@ resource "aws_iam_policy" "ecs_ssm_role" {
           "ssm:GetParameter",
           "ssm:GetParameters"
         ],
-        Resource = [
-          aws_ssm_parameter.db_username.arn,
-          aws_ssm_parameter.db_password.arn,
-          aws_ssm_parameter.db_url.arn,
-          aws_ssm_parameter.redis_host.arn,
-          aws_ssm_parameter.redis_port.arn,
-          aws_ssm_parameter.jwt_secret_key.arn
-        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.this.account_id}:parameter/${var.project_name}/*"
       },
       {
         Effect = "Allow",
