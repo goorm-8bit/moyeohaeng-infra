@@ -12,3 +12,8 @@ output "lb_zone_id" {
   description = "Route 53에서 ALB 레코드 생성에 사용할 Load Balancer의 Zone ID"
   value       = aws_lb.this.zone_id
 }
+
+output "grafana_taget_group_arn" {
+  description = "그라파나 ECS 서비스를 연결할 Target Group의 ARN"
+  value       = aws_lb_target_group.grafana.arn
+}

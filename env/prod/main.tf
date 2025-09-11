@@ -145,5 +145,6 @@ module "monitoring" {
   private_dns_namespace_id = module.network.private_dns_namespace_id
   aws_region               = var.aws_region
   alb_sg_id                = module.sg.alb_sg_id
+  target_group_arn         = module.alb.grafana_taget_group_arn
   cluster_id               = module.ecs_cluster.cluster_id
 }

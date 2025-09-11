@@ -46,9 +46,16 @@ resource "aws_security_group" "ecs" {
     security_groups = [aws_security_group.alb.id]
   }
   ingress {
-    description     = "Allow MNG traffic from ALB"
+    description     = "Allow Prometheus/MNG traffic from ALB"
     from_port       = 9090
     to_port         = 9090
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+  ingress {
+    description     = "Allow Grafana traffic from ALB"
+    from_port       = 3000
+    to_port         = 3000
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
   }

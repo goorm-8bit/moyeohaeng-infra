@@ -61,6 +61,12 @@ resource "aws_ecs_service" "grafana" {
   desired_count   = 1
   launch_type     = "EC2"
 
+  load_balancer {
+    target_group_arn = var.target_group_arn
+    container_name   = "grafana"
+    container_port   = 3000
+  }
+
   network_configuration {
     subnets         = var.subnet_ids
     security_groups = [aws_security_group.grafana.id]

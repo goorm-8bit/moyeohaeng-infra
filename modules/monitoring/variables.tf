@@ -26,6 +26,11 @@ variable "alb_sg_id" {
   type        = string
 }
 
+variable "target_group_arn" {
+  description = "그라파나 ECS 서비스에 연결할 Target Group의 ARN"
+  type        = string
+}
+
 variable "cluster_id" {
   default = "ECS 클러스터의 ID"
   type    = string
