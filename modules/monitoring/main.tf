@@ -45,6 +45,12 @@ resource "aws_ecs_task_definition" "grafana" {
           containerPort = 3000
         }
       ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:3000/api/health || exit 1"
+        ]
+      }
     }
   ])
 
@@ -156,6 +162,13 @@ resource "aws_ecs_task_definition" "prometheus" {
           value = var.prometheus_config_content
         }
       ]
+
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:9090/-/healthy || exit 1"
+        ]
+      }
     }
   ])
 
