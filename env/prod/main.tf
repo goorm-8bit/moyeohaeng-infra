@@ -1,7 +1,11 @@
+locals {
+  name_prefix = "${var.project_name}-${var.environment}"
+}
+
 # 1. 네트워크 모듈
 module "network" {
   source             = "../../modules/network"
-  project_name       = var.project_name
+  project_name       = local.name_prefix
   vpc_cidr_block     = var.vpc_cidr_block
   subnet_cidr_blocks = var.subnet_cidr_blocks
 }
@@ -9,20 +13,20 @@ module "network" {
 # 2. 보안 그룹 모듈
 module "sg" {
   source       = "../../modules/compute/sg"
-  project_name = var.project_name
+  project_name = local.name_prefix
   vpc_id       = module.network.vpc_id
 }
 
 # 3. IAM 모듈
 module "iam" {
   source       = "../../modules/iam"
-  project_name = var.project_name
+  project_name = local.name_prefix
 }
 
 # 4. ALB 모듈
 module "alb" {
   source          = "../../modules/compute/alb"
-  project_name    = var.project_name
+  project_name    = local.name_prefix
   certificate_arn = var.certificate_arn
   vpc_id          = module.network.vpc_id
   subnet_ids      = module.network.subnet_ids
@@ -32,13 +36,13 @@ module "alb" {
 # 5. ECS 클러스터 모듈
 module "ecs_cluster" {
   source       = "../../modules/compute/ecs_cluster"
-  project_name = var.project_name
+  project_name = local.name_prefix
 }
 
 # 6. ECS Task Definition 모듈
 module "ecs_task_definition" {
   source             = "../../modules/compute/ecs_task_definition"
-  project_name       = var.project_name
+  project_name       = local.name_prefix
   execution_role_arn = module.iam.ecs_task_execution_role_arn
   image_url          = "${module.ecr.repository_url}:${var.image_tag}"
   environment        = var.spring_environment
@@ -51,8 +55,8 @@ module "ecs_task_definition" {
 # 7. ECS 서비스 모듈
 module "ecs_service" {
   source              = "../../modules/compute/ecs_service"
-  project_name        = var.project_name
-  container_name      = var.project_name
+  project_name        = local.name_prefix
+  container_name      = local.name_prefix
   cluster_id          = module.ecs_cluster.cluster_id
   task_definition_arn = module.ecs_task_definition.task_definition_arn
   subnet_ids          = module.network.subnet_ids
@@ -63,7 +67,7 @@ module "ecs_service" {
 # 8. 시작 템플릿 모듈
 module "lt" {
   source                    = "../../modules/compute/lt"
-  project_name              = var.project_name
+  project_name              = local.name_prefix
   instance_type             = var.instance_type
   cluster_name              = module.ecs_cluster.cluster_name
   ecs_sg_id                 = module.iam.ecs_instance_profile_name
@@ -73,7 +77,7 @@ module "lt" {
 # 9. 오토스케일링 그룹 모듈
 module "asg" {
   source           = "../../modules/compute/asg"
-  project_name     = var.project_name
+  project_name     = local.name_prefix
   min_size         = var.asg_min_size
   max_size         = var.asg_max_size
   desired_capacity = var.asg_desired_capacity
@@ -84,13 +88,13 @@ module "asg" {
 # 10. ECR 모듈
 module "ecr" {
   source       = "../../modules/developer_tool/ecr"
-  project_name = var.project_name
+  project_name = local.name_prefix
 }
 
 # 11. RDS 모듈
 module "rds" {
   source         = "../../modules/database/rds"
-  project_name   = var.project_name
+  project_name   = local.name_prefix
   db_name        = var.db_name
   db_username    = var.db_username
   instance_class = var.instance_class
@@ -101,7 +105,7 @@ module "rds" {
 # 12. ElastiCache 모듈
 module "ec" {
   source            = "../../modules/database/ec"
-  project_name      = var.project_name
+  project_name      = local.name_prefix
   node_type         = var.node_type
   subnet_ids        = module.network.subnet_ids
   elasticache_sg_id = module.sg.elasticache_sg_id
@@ -110,7 +114,7 @@ module "ec" {
 # 13. SSM 모듈
 module "ssm" {
   source                      = "../../modules/ssm"
-  project_name                = var.project_name
+  project_name                = local.name_prefix
   db_instance_address         = module.rds.db_instance_address
   db_instance_port            = module.rds.db_instance_port
   db_name                     = module.rds.db_name
