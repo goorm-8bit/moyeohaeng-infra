@@ -79,7 +79,7 @@ variable "asg_max_size" {
 variable "asg_desired_capacity" {
   description = "평상시 유지할 EC2 인스턴스 수"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "db_name" {
