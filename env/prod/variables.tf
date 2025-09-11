@@ -105,3 +105,15 @@ variable "node_type" {
   type        = string
   default     = "cache.t4g.micro"
 }
+
+variable "zone_name" {
+  description = "레코드를 생성할 Route 53 호스팅 영역의 이름"
+  type        = string
+  default     = "moyeohaeng.online"
+}
+
+variable "record_name" {
+  description = "생성할 레코드의 이름 (서브도메인)"
+  type        = string
+  default     = "api"
+}

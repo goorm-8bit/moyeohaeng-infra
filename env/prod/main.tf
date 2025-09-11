@@ -119,3 +119,12 @@ module "ssm" {
   ec_primary_endpoint_address = module.ec.primary_endpoint_address
   ec_port                     = module.ec.port
 }
+
+# 14. Route 53 모듈
+module "route53" {
+  source          = "../../modules/network/route53"
+  zone_name       = var.zone_name
+  record_name     = var.record_name
+  target_dns_name = module.alb.lb_dns_name
+  target_zone_id  = module.alb.lb_zone_id
+}
