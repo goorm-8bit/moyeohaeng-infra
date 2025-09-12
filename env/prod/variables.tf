@@ -44,6 +44,10 @@ variable "spring_environment" {
   }))
   default = [
     {
+      name  = "TZ",
+      value = "Asia/Seoul"
+    },
+    {
       name  = "CORS_ALLOWED_ORIGINS",
       value = "https://moyeohaeng.online,https://dev.moyeohaeng.online,http://localhost:5173"
     },
