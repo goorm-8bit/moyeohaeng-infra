@@ -1,0 +1,39 @@
+auth_enabled: false # 인증 비활성화
+
+server:
+  http_listen_port: 3100
+
+limits_config:
+  allow_structured_metadata: false # 구조화된 메타데이터 기능 비활성화
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    s3:
+      bucketnames: "${loki_s3_bucket_name}"
+      region: "${aws_region}"
+  replication_factor: 1 # 로키 인스턴스 간 데이터 복제 수
+  ring:
+    kvstore:
+      store: inmemory
+
+# 인덱스와 청크(로그 원본 데이터)를 어떻게 저장할지에 대한 규칙 정의
+schema_config:
+  configs:
+    - from: 2020-10-24
+      object_store: s3
+      store: boltdb-shipper # 인덱스 파일을 로컬에서 만든 뒤, 주기적으로 S3로 보내서 보관하는 방식
+      schema: v11
+      index:
+        prefix: index_ # S3에 저장될 인덱스 파일들의 이름 앞에 붙을 접두사
+        period: 24h # 인덱스 파일 생성 주기
+
+# 인덱스 저장 방식에 대한 상세 설정
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
+    cache_ttl: 24h
+  aws:
+    s3: s3://${aws_region}

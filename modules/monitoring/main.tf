@@ -209,3 +209,150 @@ resource "aws_service_discovery_service" "prometheus" {
     routing_policy = "MULTIVALUE"
   }
 }
+
+# 9. 로키가 S3 버킷에 접근할 수 있도록 허용하는 IAM 정책 생성
+resource "aws_iam_policy" "loki_s3" {
+  name = "${var.project_name}-loki-s3-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          var.loki_s3_bucket_arn,
+          "${var.loki_s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# 10. 로키 태스크가 사용할 IAM 역할에 S3 정책 연결
+resource "aws_iam_role" "loki_task_role" {
+  name = "${var.project_name}-loki-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Effect = "Allow",
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "loki_s3" {
+  policy_arn = aws_iam_policy.loki_s3.arn
+  role       = aws_iam_role.loki_task_role.name
+}
+
+# 11. 로키용 보안 그룹 생성
+resource "aws_security_group" "loki" {
+  name        = "${var.project_name}-loki-sg"
+  description = "Security group for Loki"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "Allow Loki traffic from Grafana"
+    from_port       = 3100
+    to_port         = 3100
+    protocol        = "tcp"
+    security_groups = [aws_security_group.grafana.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-loki-sg"
+  }
+}
+
+# 12. 로키용 ECS 태스크 정의
+resource "aws_ecs_task_definition" "loki" {
+  family                   = "${var.project_name}-loki"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["EC2"]
+  cpu                      = 256
+  memory                   = 512
+  task_role_arn            = aws_iam_role.loki_task_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "loki"
+      image     = "grafana/loki:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 3100
+          hostPort      = 3100
+        }
+      ]
+      entryPoint = ["/bin/sh", "-c"]
+      command = [
+        "echo \"$LOKI_CONFIG_YML\" > /etc/loki/config.yml && /usr/bin/loki -config.file=/etc/loki/config.yml"
+      ]
+      environment = [
+        {
+          name  = "LOKI_CONFIG_YML"
+          value = var.loki_config_content
+        }
+      ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "wget -q --spider http://localhost:3100/ready || exit 1"
+        ]
+      }
+    }
+  ])
+
+  tags = {
+    Name = "${var.project_name}-loki-td"
+  }
+}
+
+# 13. 로키용 ECS 서비스 생성 및 서비스 디스커버리 등록
+resource "aws_ecs_service" "loki" {
+  name            = "${var.project_name}-loki"
+  cluster         = var.cluster_id
+  task_definition = aws_ecs_task_definition.loki.arn
+  desired_count   = 1
+  launch_type     = "EC2"
+
+  network_configuration {
+    subnets         = var.subnet_ids
+    security_groups = [aws_security_group.loki.id]
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.loki.arn
+  }
+}
+
+# 14. 로키용 서비스 디스커버리 서비스 생성
+resource "aws_service_discovery_service" "loki" {
+  name = "loki"
+
+  dns_config {
+    namespace_id = var.private_dns_namespace_id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+}

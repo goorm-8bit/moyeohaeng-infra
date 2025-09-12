@@ -136,6 +136,12 @@ module "route53" {
   target_zone_id  = module.alb.lb_zone_id
 }
 
+module "loki_s3_bucket" {
+  source       = "../../modules/storage"
+  project_name = local.name_prefix
+  bucket_name  = "loki-logs"
+}
+
 # 15. 모니터링 모듈
 module "monitoring" {
   source                    = "../../modules/monitoring"
@@ -148,4 +154,9 @@ module "monitoring" {
   target_group_arn          = module.alb.grafana_taget_group_arn
   cluster_id                = module.ecs_cluster.cluster_id
   prometheus_config_content = templatefile("${path.root}/config/prometheus.yml", {})
+  loki_config_content = templatefile("${path.root}/config/loki-config.yml", {
+    loki_s3_bucket_name = module.loki_s3_bucket.bucket_id
+    aws_region          = var.aws_region
+  })
+  loki_s3_bucket_arn = module.loki_s3_bucket.bucket_arn
 }

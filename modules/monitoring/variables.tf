@@ -14,6 +14,7 @@ variable "subnet_ids" {
 
 variable "private_dns_namespace_id" {
   description = "AWS Cloud Map Private DNS 네임스페이스의 ID"
+  type        = string
 }
 
 variable "aws_region" {
@@ -32,12 +33,23 @@ variable "target_group_arn" {
 }
 
 variable "cluster_id" {
-  default = "ECS 클러스터의 ID"
-  type    = string
+  description = "ECS 클러스터의 ID"
+  type        = string
 }
 
 variable "prometheus_config_content" {
   description = "프로메테우스 설정 파일(prometheus.yml)의 내용"
   type        = string
   sensitive   = true
+}
+
+variable "loki_config_content" {
+  description = "로키 설정 파일(loki-config.yml)의 내용"
+  type        = string
+  sensitive   = true
+}
+
+variable "loki_s3_bucket_arn" {
+  description = "로키 로그를 저장할 S3 버킷의 ARN"
+  type        = string
 }
