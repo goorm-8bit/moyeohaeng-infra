@@ -1,0 +1,65 @@
+// 1. 로그 수집
+// 호스트의 docker 데몬에 연결하여 실행 중인 모든 컨테이너를 찾음
+discovery.docker "ecs_containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// 위에서 찾은 컨테이너들로부터 로그를 수집
+loki.source.docker "app_logs" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.docker.ecs_containers.targets
+  forward_to = [loki.write.default.receiver]
+
+  labels = {
+    app = "${project_name}",
+  }
+  relabel_rules = discovery.relabel.logs_integrations_docker.rules
+}
+
+// 필터링 및 레이블 추가
+discovery.relabel "logs_integrations_docker" {
+  targets = discovery.docker.ecs_containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_amazonaws_ecs_task_definition_family"]
+    regex         = ".*moyeohaeng-prod-td.*"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "instance"
+    regex         = "(.*)"
+    replacement   = "$1"
+    action        = "replace"
+  }
+}
+
+// 수집한 로그를 보낼 Loki 주소
+loki.write "default" {
+    endpoint {
+        url = "http://loki.${project_name}.local:3100/loki/api/v1/push"
+    }
+}
+
+// 2. 메트릭 수집
+// 수집한 메트릭을 보낼 프로메테우스 주소
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus.${project_name}.local:9090/api/v1/write"
+  }
+}
+
+// VPC 내부의 Private DNS를 사용하여 ECS 서비스의 IP 조회
+discovery.dns "dns_lookup" {
+  names = ["service.${project_name}.local"]
+  type = "A"
+  port = 9090
+}
+
+// 위에서 설정된 대상에 주기적으로 접근하여 메트릭 수집
+prometheus.scrape "app_metrics" {
+    targets = discovery.dns.dns_lookup.targets
+    metrics_path = "/actuator/prometheus"
+    forward_to = [prometheus.remote_write.default.receiver]
+}

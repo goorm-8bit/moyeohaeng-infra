@@ -60,6 +60,15 @@ resource "aws_security_group" "ecs" {
     security_groups = [aws_security_group.alb.id]
   }
 
+  # Alloy 메트릭 수집 트래픽 허용
+  ingress {
+    description = "Allow App metrics scrape from Alloy"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    self        = true
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

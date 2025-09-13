@@ -17,11 +17,6 @@ variable "private_dns_namespace_id" {
   type        = string
 }
 
-variable "aws_region" {
-  description = "ARN 구성을 위한 AWS 리전"
-  type        = string
-}
-
 variable "alb_sg_id" {
   description = "그라파나 접근을 허용할 ALB의 보안 그룹 ID"
   type        = string
@@ -51,5 +46,16 @@ variable "loki_config_content" {
 
 variable "loki_s3_bucket_arn" {
   description = "로키 로그를 저장할 S3 버킷의 ARN"
+  type        = string
+}
+
+variable "alloy_config_content" {
+  description = "Alloy 설정 파일(config.river)의 내용"
+  type        = string
+  sensitive   = true
+}
+
+variable "ecs_instance_sg_id" {
+  description = "Alloy가 실행되는 EC2 인스턴스의 보안 그룹 ID"
   type        = string
 }

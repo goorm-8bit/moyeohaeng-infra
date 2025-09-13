@@ -107,13 +107,19 @@ resource "aws_security_group" "prometheus" {
   description = "Security group for Prometheus"
   vpc_id      = var.vpc_id
 
-  # Ingress: 그라파나에서 오는 9090 포트 트래픽 허용 (데이터 소스 연결용)
   ingress {
-    description     = "Allow Prometheus traffic from Grafana"
-    from_port       = 9090
-    to_port         = 9090
-    protocol        = "tcp"
-    security_groups = [aws_security_group.grafana.id]
+    description = "Allow Prometheus traffic from Grafana/Alloy"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    security_groups = [
+      aws_security_group.grafana.id,
+
+      # Alloy가 host 모드로 동작하므로 EC2 인스턴스 SG 허용
+      # host 모드는 컨테이너가 ENI를 가지지 않고, EC2의 네트워크 스택을 그대로 사용
+      # 컨테이너가 바인딩하는 포트 = EC2 인스턴스에서 열려 있는 포트
+      var.ecs_instance_sg_id
+    ]
   }
 
   egress {
@@ -133,8 +139,8 @@ resource "aws_ecs_task_definition" "prometheus" {
   family                   = "${var.project_name}-prometheus"
   network_mode             = "awsvpc"
   requires_compatibilities = ["EC2"]
-  cpu                      = 512
-  memory                   = 1024
+  cpu                      = 256
+  memory                   = 512
 
   container_definitions = jsonencode([
     {
@@ -152,7 +158,7 @@ resource "aws_ecs_task_definition" "prometheus" {
       entryPoint = ["/bin/sh", "-c"]
       command = [
         # 환경 변수(PROMETHEUS_YML)의 내용을 파일로 저장하고, 그 파일을 사용해 프로메테우스 실행
-        "echo \"$PROMETHEUS_YML\" > /etc/prometheus/prometheus.yml && /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+        "echo \"$PROMETHEUS_YML\" > /etc/prometheus/prometheus.yml && /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.enable-remote-write-receiver"
       ]
 
       # 2. 환경 변수를 통해 설정 파일 내용을 주입
@@ -262,11 +268,14 @@ resource "aws_security_group" "loki" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description     = "Allow Loki traffic from Grafana"
-    from_port       = 3100
-    to_port         = 3100
-    protocol        = "tcp"
-    security_groups = [aws_security_group.grafana.id]
+    description = "Allow Loki traffic from Grafana/Alloy"
+    from_port   = 3100
+    to_port     = 3100
+    protocol    = "tcp"
+    security_groups = [
+      aws_security_group.grafana.id,
+      var.ecs_instance_sg_id
+    ]
   }
 
   egress {
@@ -355,4 +364,115 @@ resource "aws_service_discovery_service" "loki" {
     }
     routing_policy = "MULTIVALUE"
   }
+}
+
+# 15. Alloy가 ECS 서비스 디스커버리를 위해 사용할 IAM 정책
+# Alloy가 메트릭 수집 대상을 찾기 위해 ECS 정보를 읽도록 허용
+resource "aws_iam_policy" "alloy_ecs_discovery" {
+  name = "${var.project_name}-alloy-ecs-discovery"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecs:ListTasks",
+          "ecs:DescribeTasks",
+          "ecs:DescribeContainerInstances",
+          "ec2:DescribeInstances"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "alloy_ecs_discovery" {
+  role       = aws_iam_role.loki_task_role.name
+  policy_arn = aws_iam_policy.alloy_ecs_discovery.arn
+}
+
+# 16. Alloy용 보안 그룹 생성
+resource "aws_security_group" "alloy" {
+  name        = "${var.project_name}-alloy-sg"
+  description = "Security group for Alloy"
+  vpc_id      = var.vpc_id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# 17. Alloy용 ECS 태스크 정의
+resource "aws_ecs_task_definition" "alloy" {
+  family                   = "${var.project_name}-alloy"
+  network_mode             = "host"
+  requires_compatibilities = ["EC2"]
+  cpu                      = 256
+  memory                   = 512
+
+  # 로키와 동일한 역할을 사용하여 S3 접근 및 서비스 디스커버리 권한 획득
+  task_role_arn = aws_iam_role.loki_task_role.arn
+
+  # 호스트의 도커 소켓과 로그 파일에 접근하기 위한 볼륨 정의
+  volume {
+    name      = "docker-socket"
+    host_path = "/var/run/docker.sock"
+  }
+  volume {
+    name      = "docker-logs"
+    host_path = "/var/lib/docker/containers"
+  }
+
+  container_definitions = jsonencode([
+    {
+      name      = "alloy"
+      image     = "grafana/alloy:latest"
+      essential = true
+
+      # 호스트의 도커 소켓과 로그 디렉토리를 컨테이너에 마운트
+      mountPoints = [
+        {
+          sourceVolume  = "docker-socket"
+          containerPath = "/var/run/docker.sock"
+          readOnly      = true
+        },
+        {
+          sourceVolume  = "docker-logs"
+          containerPath = "/var/lib/docker/containers"
+          readOnly      = true
+        }
+      ]
+
+      entryPoint = ["/bin/sh", "-c"]
+      command = [
+        "echo \"$ALLOY_CONFIG_RIVER\" > /etc/alloy/config.river && /bin/alloy run /etc/alloy/config.river"
+      ]
+
+      environment = [
+        {
+          name  = "ALLOY_CONFIG_RIVER"
+          value = var.alloy_config_content
+        }
+      ]
+    }
+  ])
+
+  tags = {
+    Name = "${var.project_name}-alloy-td"
+  }
+}
+
+# 18. Alloy용 ECS 서비스 생성
+resource "aws_ecs_service" "alloy" {
+  name            = "${var.project_name}-alloy"
+  cluster         = var.cluster_id
+  task_definition = aws_ecs_task_definition.alloy.arn
+
+  # DAEMON: 클러스터의 모든 EC2 인스턴스에 이 태스크를 하나씩 실행
+  scheduling_strategy = "DAEMON"
 }
