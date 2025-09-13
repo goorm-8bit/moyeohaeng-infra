@@ -121,3 +121,16 @@ variable "record_name" {
   type        = string
   default     = "api"
 }
+
+variable "grafana_admin_user" {
+  description = "그라파나 관리자 ID"
+  type        = string
+  default     = "moyeohaeng"
+}
+
+variable "grafana_admin_password" {
+  description = "그라파나 관리자 비밀번호"
+  type        = string
+  default     = "password"
+  sensitive   = true
+}

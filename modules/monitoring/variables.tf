@@ -59,3 +59,14 @@ variable "ecs_instance_sg_id" {
   description = "Alloy가 실행되는 EC2 인스턴스의 보안 그룹 ID"
   type        = string
 }
+
+variable "grafana_admin_user" {
+  description = "그라파나 관리자 ID"
+  type        = string
+}
+
+variable "grafana_admin_password" {
+  description = "그라파나 관리자 비밀번호"
+  type        = string
+  sensitive   = true
+}

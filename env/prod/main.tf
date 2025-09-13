@@ -163,5 +163,7 @@ module "monitoring" {
     project_name = local.name_prefix
     aws_region   = var.aws_region
   })
-  ecs_instance_sg_id = module.sg.ecs_sg_id
+  ecs_instance_sg_id     = module.sg.ecs_sg_id
+  grafana_admin_user     = var.grafana_admin_user
+  grafana_admin_password = var.grafana_admin_password
 }

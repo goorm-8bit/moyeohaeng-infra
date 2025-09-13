@@ -68,6 +68,6 @@ prometheus.scrape "app_metrics" {
 prometheus.exporter.unix "unix" { }
 
 prometheus.scrape "unix_metrics" {
-  targets    = prometheus.exporter.unix.system.targets
+  targets    = prometheus.exporter.unix.unix.targets
   forward_to = [prometheus.remote_write.default.receiver]
 }
