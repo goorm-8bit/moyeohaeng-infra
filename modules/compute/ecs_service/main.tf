@@ -1,3 +1,17 @@
+# 서비스 디스커버리 서비스 생성
+resource "aws_service_discovery_service" "app" {
+  name = "service"
+
+  dns_config {
+    namespace_id = var.private_dns_namespace_id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+    routing_policy = "MULTIVALUE"
+  }
+}
+
 resource "aws_ecs_service" "this" {
   name            = "${var.project_name}-service"
   cluster         = var.cluster_id
@@ -17,6 +31,11 @@ resource "aws_ecs_service" "this" {
     target_group_arn = var.target_group_arn
     container_name   = var.container_name
     container_port   = var.container_port
+  }
+
+  # 서비스 디스커버리 설정
+  service_registries {
+    registry_arn = aws_service_discovery_service.app.arn
   }
 
   tags = {

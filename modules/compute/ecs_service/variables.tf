@@ -43,3 +43,8 @@ variable "container_port" {
   type        = number
   default     = 8080
 }
+
+variable "private_dns_namespace_id" {
+  description = "AWS Cloud Map Private DNS 네임스페이스의 ID"
+  type        = string
+}

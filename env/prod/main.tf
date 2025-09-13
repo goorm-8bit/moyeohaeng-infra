@@ -55,14 +55,15 @@ module "ecs_task_definition" {
 
 # 7. ECS 서비스 모듈
 module "ecs_service" {
-  source              = "../../modules/compute/ecs_service"
-  project_name        = local.name_prefix
-  container_name      = local.name_prefix
-  cluster_id          = module.ecs_cluster.cluster_id
-  task_definition_arn = module.ecs_task_definition.task_definition_arn
-  subnet_ids          = module.network.subnet_ids
-  ecs_sg_id           = module.sg.ecs_sg_id
-  target_group_arn    = module.alb.target_group_arn
+  source                   = "../../modules/compute/ecs_service"
+  project_name             = local.name_prefix
+  container_name           = local.name_prefix
+  cluster_id               = module.ecs_cluster.cluster_id
+  task_definition_arn      = module.ecs_task_definition.task_definition_arn
+  subnet_ids               = module.network.subnet_ids
+  ecs_sg_id                = module.sg.ecs_sg_id
+  target_group_arn         = module.alb.target_group_arn
+  private_dns_namespace_id = module.network.private_dns_namespace_id
 }
 
 # 8. 시작 템플릿 모듈
