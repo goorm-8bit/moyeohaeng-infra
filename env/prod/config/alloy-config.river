@@ -63,3 +63,11 @@ prometheus.scrape "app_metrics" {
     metrics_path = "/actuator/prometheus"
     forward_to = [prometheus.remote_write.default.receiver]
 }
+
+// 3. 하드웨어 및 OS 메트릭 수집
+prometheus.exporter.unix "unix" { }
+
+prometheus.scrape "unix_metrics" {
+  targets    = prometheus.exporter.unix.system.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
